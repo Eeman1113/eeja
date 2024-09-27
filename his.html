@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eeja. - Her Whisper To Me</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #8B7355;
+            --bg-color: #f5f5dc;
+            --card-bg: rgba(230, 230, 202, 0.3);
+            --text-color: #4a4a4a;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+        .logo {
+            font-family: 'Playfair Display', serif;
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 40px;
+            font-size: 64px;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 30px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .image-item {
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .image-item:hover {
+            transform: translateY(-5px);
+        }
+        .image-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            aspect-ratio: 1 / 1;
+            position: relative;
+        }
+        .image-container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1000;
+            border-radius: 0;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+        .image-container.fullscreen img {
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .image-title {
+            margin-top: 12px;
+            color: var(--primary-color);
+            font-size: 16px;
+            text-align: center;
+            font-weight: 400;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        footer p {
+            margin: 5px 0;
+        }
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 48px;
+            }
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 20px;
+            }
+            .image-title {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="logo">eeman's thoughts.</h1>
+    <div class="gallery" id="image-gallery"></div>
+
+    <footer>
+        <p>With Love <3 By Eeman</p>
+    </footer>
+
+    <script>
+        const images = [
+            { id: 1, title: "Animated", path: "./images/Animated.jpg" },
+            { id: 2, title: "Ephemeral Bonds", path: "./images/Bonds.jpg" },
+            { id: 3, title: "Brainfuck", path: "./images/Brainfuck.jpg" },
+            { id: 4, title: "Desolate", path: "./images/Desolate.jpg" },
+            { id: 5, title: "Diary Of 2024/01/03", path: "./images/Diary.jpg" },
+            { id: 6, title: "Found", path: "./images/Found.jpg" },
+            { id: 7, title: "Maybe", path: "./images/Maybe.jpg" },
+            { id: 8, title: "Melted", path: "./images/Melted.jpg" },
+            { id: 9, title: "Memories", path: "./images/Memories.jpg" },
+            { id: 10, title: "Smiling", path: "./images/Smiling.jpg" },
+            { id: 11, title: "The Email", path: "./images/The Email.jpg" },
+            { id: 12, title: "Workholic", path: "./images/Workholic.jpg" }
+        ];
+
+        function createImageItem(image) {
+            return `
+                <div class="image-item">
+                    <div class="image-container">
+                        <img src="${image.path}" alt="${image.title}">
+                    </div>
+                    <p class="image-title">${image.title}</p>
+                </div>
+            `;
+        }
+
+        function renderGallery() {
+            const gallery = document.getElementById('image-gallery');
+            gallery.innerHTML = images.map(createImageItem).join('');
+            
+            gallery.addEventListener('click', function(e) {
+                const imageContainer = e.target.closest('.image-container');
+                if (imageContainer) {
+                    toggleFullScreen(imageContainer);
+                }
+            });
+        }
+
+        function toggleFullScreen(container) {
+            if (!document.fullscreenElement) {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.mozRequestFullScreen) {
+                    container.mozRequestFullScreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+                container.classList.add('fullscreen');
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+                container.classList.remove('fullscreen');
+            }
+        }
+
+        renderGallery();
+
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+        function handleFullscreenChange() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement && !document.msFullscreenElement) {
+                const fullscreenContainer = document.querySelector('.image-container.fullscreen');
+                if (fullscreenContainer) {
+                    fullscreenContainer.classList.remove('fullscreen');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
