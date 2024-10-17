@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Sweet Letter for Miss Joshi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Borel&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Borel', cursive;
+            background-color: #ffe6e6;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+        .envelope {
+            width: 200px;
+            height: 120px;
+            background-color: #ff9999;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .envelope:hover {
+            transform: scale(1.05);
+        }
+        .envelope:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 100px solid transparent;
+            border-right: 100px solid transparent;
+            border-top: 60px solid #ffcccc;
+        }
+        .envelope:after {
+            content: '💌';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+        }
+        .letter {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 600px;
+            height: 80%;
+            background-color: white;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 10;
+            border-radius: 20px;
+            line-height: 1.6;
+            font-size: 18px;
+            color: #ff6666;
+        }
+        .letter h2 {
+            color: #ff4d4d;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .emoji {
+            position: fixed;
+            font-size: 24px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            z-index: 20;
+        }
+        .heart {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff6666;
+            transform: rotate(45deg);
+            animation: pulse 1s infinite;
+        }
+        .heart:before, .heart:after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff6666;
+            border-radius: 50%;
+        }
+        .heart:before {
+            left: -10px;
+        }
+        .heart:after {
+            top: -10px;
+        }
+        @keyframes pulse {
+            0% { transform: rotate(45deg) scale(1); }
+            50% { transform: rotate(45deg) scale(1.1); }
+            100% { transform: rotate(45deg) scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="envelope" onclick="openLetter()"></div>
+    </div>
+    <div class="letter" id="letter">
+        <h2>Dear Miss Joshi,</h2>
+        <p>300 days of knowing you,<br> but not once have I felt bored, <br> not once have I felt forced, <br> not once have I felt bound, <br> not once have I felt restricted, <br> not once have I felt unheard, <br> not once have I felt uncared for, <br> not once have I felt lonely. <br><br>
+        Every day with you feels like day one. <br> Every day feels like a memory I hold close. <br> Every day feels like, "Aaj Divi se baat karunga, fun hoga." <br> Every day feels like it's the first. <br> Every day feels fresh, young, exciting, and something to look forward to. <br><br>
+        Thanks for this, ma'am. <br> Thanks for every day. <br> Thanks for giving me the chance to fall into your life. <br> Thanks for it ❤️<br>Tera Emonie</p>
+    </div>
+
+    <script>
+        function floatEnvelope() {
+            const envelope = document.querySelector('.envelope');
+            let y = 0;
+            let direction = 1;
+            setInterval(() => {
+                y += 0.5 * direction;
+                if (y > 10 || y < -10) direction *= -1;
+                envelope.style.transform = `translateY(${y}px)`;
+            }, 50);
+        }
+
+        function openLetter() {
+            document.querySelector('.envelope').style.display = 'none';
+            document.getElementById('letter').style.display = 'block';
+            createEmojis();
+            createHearts();
+        }
+
+        function createEmojis() {
+            const emojis = ['❤️', '😊', '🌟', '🌸', '✨', '💖', '🎉', '🌈'];
+            for (let i = 0; i < 10; i++) {  // Reduced from 50 to 20
+                const emoji = document.createElement('div');
+                emoji.className = 'emoji';
+                emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                emoji.style.left = `${Math.random() * 100}vw`;
+                emoji.style.top = `${Math.random() * 100}vh`;
+                document.body.appendChild(emoji);
+                setTimeout(() => {
+                    emoji.style.opacity = '1';
+                }, i * 100);
+            }
+        }
+
+        function createHearts() {
+            for (let i = 0; i < 10; i++) {  // Reduced from 20 to 10
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.style.left = `${Math.random() * 100}%`;
+                heart.style.top = `${Math.random() * 100}%`;
+                document.body.appendChild(heart);
+            }
+        }
+
+        floatEnvelope();
+    </script>
+</body>
+</html>
