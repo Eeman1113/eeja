@@ -23,14 +23,14 @@
         }
         .envelope {
             width: 80vw;
-            max-width: 200px;
-            height: 48vw;
-            max-height: 120px;
+            max-width: 300px;
+            aspect-ratio: 1.6 / 1;
             background-color: #ff9999;
             position: relative;
             cursor: pointer;
             transition: transform 0.3s ease-in-out;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
         }
         .envelope:hover {
             transform: scale(1.05);
@@ -38,23 +38,10 @@
         .envelope:before {
             content: '❤️';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 0;
-            border-left: 40vw solid transparent;
-            border-right: 40vw solid transparent;
-            border-top: 24vw solid #ffcccc;
-            max-width: 100px;
-            max-height: 60px;
-        }
-        .envelope:after {
-            content: '';
-            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 20px;
+            font-size: 40px;
         }
         .letter {
             display: none;
@@ -88,32 +75,13 @@
             transition: opacity 0.5s ease-in-out;
             z-index: 20;
         }
-        .heart {
-            position: absolute;
-            width: 15px;
-            height: 15px;
-            background-color: #ff6666;
-            transform: rotate(45deg);
-            animation: pulse 1s infinite;
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
         }
-        .heart:before, .heart:after {
-            content: '';
-            position: absolute;
-            width: 15px;
-            height: 15px;
-            background-color: #ff6666;
-            border-radius: 50%;
-        }
-        .heart:before {
-            left: -7.5px;
-        }
-        .heart:after {
-            top: -7.5px;
-        }
-        @keyframes pulse {
-            0% { transform: rotate(45deg) scale(1); }
-            50% { transform: rotate(45deg) scale(1.1); }
-            100% { transform: rotate(45deg) scale(1); }
+        .envelope {
+            animation: float 3s ease-in-out infinite;
         }
     </style>
 </head>
@@ -129,27 +97,15 @@
     </div>
 
     <script>
-        function floatEnvelope() {
-            const envelope = document.querySelector('.envelope');
-            let y = 0;
-            let direction = 1;
-            setInterval(() => {
-                y += 0.5 * direction;
-                if (y > 10 || y < -10) direction *= -1;
-                envelope.style.transform = `translateY(${y}px)`;
-            }, 50);
-        }
-
         function openLetter() {
             document.querySelector('.envelope').style.display = 'none';
             document.getElementById('letter').style.display = 'block';
             createEmojis();
-            createHearts();
         }
 
         function createEmojis() {
             const emojis = ['❤️', '😊', '🌟', '🌸', '✨', '💖', '🎉', '🌈'];
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 20; i++) {
                 const emoji = document.createElement('div');
                 emoji.className = 'emoji';
                 emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
@@ -161,18 +117,6 @@
                 }, i * 100);
             }
         }
-
-        function createHearts() {
-            for (let i = 0; i < 10; i++) {
-                const heart = document.createElement('div');
-                heart.className = 'heart';
-                heart.style.left = `${Math.random() * 100}%`;
-                heart.style.top = `${Math.random() * 100}%`;
-                document.body.appendChild(heart);
-            }
-        }
-
-        floatEnvelope();
     </script>
 </body>
 </html>
