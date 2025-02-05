@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Noter - Elegant Study Note Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #000;
+      color: #fff;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background: #111;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+      animation: fadeIn 0.8s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #fff;
+      font-size: 2rem;
+      letter-spacing: 0.5px;
+    }
+    p.subtitle {
+      text-align: center;
+      color: #ccc;
+      margin-bottom: 2rem;
+      font-size: 1rem;
+    }
+    form {
+      margin-bottom: 2rem;
+      animation: slideIn 0.6s ease-out;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #ccc;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.85rem 1.2rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid #444;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: #222;
+      color: #fff;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #fff;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    }
+    button {
+      display: inline-block;
+      padding: 0.85rem 1.8rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #fff;
+      color: #000;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    button:hover {
+      background-color: #ccc;
+      transform: translateY(-2px);
+    }
+    button:active {
+      transform: translateY(0);
+    }
+    #spinner {
+      text-align: center;
+      margin: 1rem 0;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      animation: fadeIn 0.5s ease;
+    }
+    .spinner-icon {
+      border: 4px solid #333;
+      border-top: 4px solid #fff;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .progress-container {
+      width: 100%;
+      background: #333;
+      border-radius: 8px;
+      margin: 1rem 0;
+      overflow: hidden;
+      height: 10px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: #fff;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+    section {
+      margin-top: 2rem;
+      animation: fadeIn 0.6s ease;
+    }
+    section h3 {
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #fff;
+      border-bottom: 2px solid #444;
+      padding-bottom: 0.5rem;
+    }
+    pre {
+      background: #222;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: 'Roboto Mono', monospace;
+      color: #fff;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #444;
+      margin: 1.5rem 0;
+    }
+    .collapsible {
+      background-color: #fff;
+      color: #000;
+      cursor: pointer;
+      padding: 0.85rem 1rem;
+      width: 100%;
+      border: none;
+      text-align: left;
+      outline: none;
+      font-size: 1rem;
+      border-radius: 8px;
+      transition: background-color 0.3s, transform 0.3s;
+      margin-top: 1.5rem;
+    }
+    .collapsible:hover,
+    .collapsible.active {
+      background-color: #ccc;
+      transform: scale(1.02);
+    }
+    .content {
+      padding: 1rem;
+      display: none;
+      overflow: hidden;
+      background-color: #111;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+      border: 1px solid #444;
+      animation: fadeIn 0.5s ease;
+    }
+    .rendered-markdown {
+      font-family: 'Nunito', sans-serif;
+      line-height: 1.6;
+      color: #fff;
+    }
+    .rendered-markdown h1,
+    .rendered-markdown h2,
+    .rendered-markdown h3,
+    .rendered-markdown h4,
+    .rendered-markdown h5,
+    .rendered-markdown h6 {
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .rendered-markdown pre {
+      background: #222;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'Roboto Mono', monospace;
+    }
+    #downloadBtn {
+      margin-top: 1.5rem;
+      background-color: #fff;
+      color: #000;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    #downloadBtn:hover {
+      background-color: #ccc;
+      transform: translateY(-2px);
+    }
+    #downloadBtn:active {
+      transform: translateY(0);
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 1.5rem 1rem;
+        border-radius: 12px;
+      }
+      h1 {
+        font-size: 1.75rem;
+      }
+      p.subtitle {
+        font-size: 0.9rem;
+      }
+      input[type="text"], button {
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+      }
+      .collapsible {
+        font-size: 0.9rem;
+        padding: 0.75rem 0.8rem;
+      }
+      pre {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📚 Noter ノート</h1>
+    <p class="subtitle">
+      Generate comprehensive study notes for any computer science topic
+    </p>
+
+    <form id="topicForm">
+      <label for="topic">
+        Enter Topic
+        <small style="font-weight:300; color:#888;">(e.g., Data Structures, Machine Learning)</small>
+      </label>
+      <input type="text" id="topic" placeholder="Your topic here..." required />
+      <button type="submit">🚀 Generate Notes</button>
+    </form>
+
+    <div id="spinner" style="display: none;">
+      <div class="spinner-icon"></div>
+      <span id="spinnerText">Loading...</span>
+    </div>
+
+    <div class="progress-container" id="progressContainer" style="display: none;">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <section id="indexSection" style="display: none;">
+      <h3>📑 Generated Index</h3>
+      <pre id="indexContent"></pre>
+    </section>
+
+    <section id="notesSection" style="display: none;">
+      <h3>Detailed Notes</h3>
+      <div id="notesContainer"></div>
+    </section>
+
+    <button type="button" class="collapsible" id="toggleNotes" style="display: none;">
+      📖 View Complete Notes
+    </button>
+    <div class="content" id="completeNotesContent"></div>
+
+    <button id="downloadBtn" style="display: none;">📥 Download Notes</button>
+  </div>
+
+  <script>
+    require('dotenv').config();
+    const API_KEY = process.env.API_KEY;;
+    const MODEL = "llama3-70b-8192";
+    
+
+    async function generateIndex(topic) {
+      try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: [{
+              role: "user",
+              content: `Generate a comprehensive study guide index for the topic: ${topic}. 
+                        Format the index with clear section headers using ## as prefix.
+                        Focus on key concepts and fundamentals.`
+            }],
+            model: MODEL,
+            temperature: 1,
+            max_tokens: 1024,
+            top_p: 1,
+            stream: false
+          })
+        });
+
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.choices && data.choices[0]?.message?.content) {
+          return data.choices[0].message.content;
+        } else {
+          throw new Error("No content in response");
+        }
+      } catch (error) {
+        console.error("Error in generateIndex:", error);
+        throw error;
+      }
+      finally {
+          setTimeout(20000);
+        }
+    }
+
+    async function generateNotesForHeader(header, topic) {
+      try {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "max_tokens": 5000,
+            "Authorization": `Bearer ${API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: [{
+              role: "user",
+              content: `Provide detailed educational notes for the section "${header}" in the context of ${topic}.
+                        Include examples and explanations where appropriate.
+                        Format the content in a clear, structured way.`
+            }],
+            model: MODEL,
+            temperature: 1,
+            max_tokens: 1024,
+            top_p: 1,
+            stream: false
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.choices && data.choices[0]?.message?.content) {
+          return data.choices[0].message.content;
+        } else {
+          throw new Error("No content in response");
+        }
+      } catch (error) {
+        console.error("Error in generateNotesForHeader:", error);
+        throw error;
+      }
+    }
+
+    function generateMarkdown(topic, indexContent, detailedNotes) {
+      let md = `# Complete Study Guide: ${topic}\n\n`;
+      md += `*Generated on: ${new Date().toLocaleString()}*\n\n`;
+      md += `---\n\n`;
+      md += `# Table of Contents\n\n`;
+      md += indexContent + `\n\n`;
+      md += `---\n\n`;
+      md += `# Detailed Notes\n\n`;
+      for (const header in detailedNotes) {
+        md += `## ${header}\n\n`;
+        md += detailedNotes[header] + `\n\n`;
+        md += `---\n\n`;
+      }
+      md += `\n\n## Additional Resources\n\n`;
+      md += `- Practice exercises and problems can be found in the respective sections\n`;
+      md += `- Refer to the official documentation for more detailed information\n`;
+      md += `- Join online communities for further discussion\n`;
+      return md;
+    }
+
+    function updateProgress(percent) {
+      document.getElementById("progressBar").style.width = percent + "%";
+    }
+
+    document.getElementById("topicForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const topic = document.getElementById("topic").value.trim();
+      if (!topic) {
+        alert("Please enter a topic.");
+        return;
+      }
+
+      document.getElementById("indexSection").style.display = "none";
+      document.getElementById("notesSection").style.display = "none";
+      document.getElementById("toggleNotes").style.display = "none";
+      document.getElementById("downloadBtn").style.display = "none";
+      document.getElementById("completeNotesContent").innerHTML = "";
+      document.getElementById("notesContainer").innerHTML = "";
+      updateProgress(0);
+      document.getElementById("progressContainer").style.display = "block";
+
+      const spinner = document.getElementById("spinner");
+      spinner.style.display = "flex";
+      document.getElementById("spinnerText").textContent = "Analyzing topic and generating index...";
+
+      try {
+        const indexContent = await generateIndex(topic);
+        document.getElementById("indexContent").textContent = indexContent;
+        document.getElementById("indexSection").style.display = "block";
+
+        const headers = indexContent
+          .split("##")
+          .filter(h => h.trim() !== "")
+          .map(h => h.trim());
+        const detailedNotes = {};
+
+        for (let i = 0; i < headers.length; i++) {
+          document.getElementById("spinnerText").textContent = `Generating notes for: ${headers[i]}`;
+          updateProgress(((i + 1) / headers.length) * 100);
+          const note = await generateNotesForHeader(headers[i], topic);
+          detailedNotes[headers[i]] = note;
+
+          const noteDiv = document.createElement("div");
+          noteDiv.style.marginBottom = "1.5rem";
+          noteDiv.innerHTML = `<h4 style="color:#fff; font-weight:600;">${headers[i]}</h4>
+                              <pre>${note}</pre>
+                              <hr>`;
+          document.getElementById("notesContainer").appendChild(noteDiv);
+        }
+        document.getElementById("notesSection").style.display = "block";
+        spinner.style.display = "none";
+
+        const markdownContent = generateMarkdown(topic, indexContent, detailedNotes);
+        document.getElementById("completeNotesContent").innerHTML =
+          '<div class="rendered-markdown">' + marked.parse(markdownContent) + "</div>";
+        document.getElementById("toggleNotes").style.display = "block";
+
+        const blob = new Blob([markdownContent], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const downloadBtn = document.getElementById("downloadBtn");
+        downloadBtn.style.display = "inline-block";
+        downloadBtn.onclick = function () {
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = topic.toLowerCase().replace(/\s+/g, "_") + "_notes.md";
+          a.click();
+        };
+      } catch (error) {
+        console.error("Error generating notes:", error);
+        alert("An error occurred while generating notes.");
+      } finally {
+        spinner.style.display = "none";
+        updateProgress(100);
+      }
+    });
+
+    document.getElementById("toggleNotes").addEventListener("click", function () {
+      this.classList.toggle("active");
+      const content = document.getElementById("completeNotesContent");
+      content.style.display = content.style.display === "block" ? "none" : "block";
+    });
+  </script>
+</body>
+</html>
