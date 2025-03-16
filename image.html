@@ -3,681 +3,839 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultra Image Compressor</title>
+    <title>String Art Generator</title>
     <style>
-        :root {
-            --primary-color: #222;
-            --secondary-color: #f5f5f5;
-            --accent-color: #ff6b6b;
-            --border-color: #444;
-            --bg-color: white;
-            --text-color: #222;
-            --drop-hover-color: rgba(0,0,0,0.03);
-            --info-border-color: #eee;
-            --loading-bg: rgba(255,255,255,0.8);
-            --button-text: white;
-            --success-color: #4CAF50;
-            --slider-track: #ddd;
-            --slider-fill: var(--accent-color);
-        }
-        
-        body.dark-mode {
-            --primary-color: #f5f5f5;
-            --secondary-color: #222;
-            --accent-color: #ff6b6b;
-            --border-color: #666;
-            --bg-color: #333;
-            --text-color: #f5f5f5;
-            --drop-hover-color: rgba(255,255,255,0.05);
-            --info-border-color: #555;
-            --loading-bg: rgba(0,0,0,0.7);
-            --button-text: #222;
-            --slider-track: #555;
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: monospace, 'Courier New', Courier;
         }
         
         body {
-            font-family: 'Courier New', monospace;
-            background-color: var(--secondary-color);
-            color: var(--text-color);
-            margin: 0;
+            background-color: #f8f8f8;
+            color: #111;
             padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            max-width: 1000px;
+            margin: 0 auto;
+            transition: background-color 0.3s, color 0.3s;
         }
         
-        .container {
-            max-width: 800px;
-            width: 100%;
-            background-color: var(--bg-color);
-            border: 2px solid var(--border-color);
-            box-shadow: 6px 6px 0 var(--border-color);
-            padding: 30px;
+        body.dark {
+            background-color: #111;
+            color: #f8f8f8;
+        }
+        
+        /* Main container */
+        .app-container {
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #fff;
+            box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.1);
+            border: 1px solid #111;
             position: relative;
-            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            transition: background-color 0.3s;
         }
         
+        body.dark .app-container {
+            background-color: #222;
+            border-color: #f8f8f8;
+        }
+        
+        /* Typography */
         h1 {
             text-align: center;
-            margin-top: 0;
-            margin-bottom: 20px;
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
             letter-spacing: 1px;
-            text-transform: uppercase;
         }
         
-        .drop-area {
-            border: 2px dashed var(--border-color);
-            border-radius: 4px;
-            padding: 40px 20px;
+        h2 {
+            margin: 1.5rem 0 1rem 0;
+            font-size: 1.2rem;
+        }
+        
+        /* Upload area */
+        .upload-area {
+            border: 2px dashed #111;
+            padding: 2rem;
             text-align: center;
-            margin-bottom: 20px;
-            transition: all 0.2s ease;
-            cursor: pointer;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.3s;
         }
         
-        .drop-area:hover, .drop-area.active {
-            background-color: var(--drop-hover-color);
-            border-color: var(--accent-color);
+        body.dark .upload-area {
+            border-color: #f8f8f8;
         }
         
-        .drop-area p {
-            margin: 8px 0;
-        }
-        
+        /* Buttons */
         button {
-            background-color: var(--primary-color);
-            color: var(--button-text);
+            background-color: #111;
+            color: #fff;
             border: none;
-            padding: 10px 15px;
-            margin: 10px 0;
+            padding: 0.75rem 1.5rem;
             cursor: pointer;
-            font-family: 'Courier New', monospace;
-            transition: all 0.2s ease;
+            font-size: 1rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body.dark button {
+            background-color: #f8f8f8;
+            color: #111;
         }
         
         button:hover {
-            background-color: var(--accent-color);
+            opacity: 0.9;
         }
         
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .info {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid var(--info-border-color);
-            font-size: 0.9rem;
-        }
-        
-        .loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--loading-bg);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-        }
-        
-        .loading p {
-            margin-top: 10px;
-        }
-        
-        .status {
-            margin-top: 15px;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-        
-        .mode-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            cursor: pointer;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            border: 2px solid var(--border-color);
-            box-shadow: 3px 3px 0 var(--border-color);
-            padding: 5px 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.2s ease;
-            font-family: 'Courier New', monospace;
-            z-index: 100;
-        }
-        
-        .mode-toggle:hover {
-            background-color: var(--accent-color);
-            color: white;
-        }
-        
-        .stats {
-            margin-top: 15px;
-            padding: 10px;
-            border: 1px solid var(--info-border-color);
+        /* Toggle dark mode button */
+        .dark-mode-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem;
             font-size: 0.8rem;
-            background-color: var(--drop-hover-color);
-            display: none;
-        }
-        
-        .good-ratio {
-            color: var(--success-color);
             font-weight: bold;
         }
-
-        /* Loading spinner */
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--accent-color);
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
         
-        .preview-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            margin-top: 20px;
-            display: none;
-        }
-        
-        .preview-box {
-            width: 48%;
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .preview-title {
-            text-align: center;
-            margin-top: 0;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-        }
-        
-        .preview-image {
-            max-width: 100%;
-            max-height: 300px;
-            display: block;
-            margin: 0 auto;
-        }
-        
+        /* Controls section */
         .controls {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid var(--info-border-color);
-            background-color: var(--drop-hover-color);
-            display: none;
+            margin-bottom: 1.5rem;
         }
         
-        .controls label {
+        .control-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
             display: block;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
         }
         
         .slider-container {
-            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
         
         input[type="range"] {
-            width: 100%;
+            flex: 1;
+            height: 2px;
             -webkit-appearance: none;
-            height: 8px;
-            border-radius: 4px;
-            background: var(--slider-track);
-            outline: none;
-            margin: 10px 0;
+            background: #111;
+        }
+        
+        body.dark input[type="range"] {
+            background: #f8f8f8;
         }
         
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--accent-color);
+            width: 10px;
+            height: 10px;
+            background: #111;
             cursor: pointer;
         }
         
-        input[type="range"]::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: var(--accent-color);
-            cursor: pointer;
-            border: none;
+        body.dark input[type="range"]::-webkit-slider-thumb {
+            background: #f8f8f8;
         }
         
-        .checkbox-container {
-            margin-bottom: 10px;
+        input[type="color"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 30px;
+            padding: 0;
+            border: 1px solid #111;
         }
         
-        .option-value {
-            float: right;
-            font-weight: bold;
+        body.dark input[type="color"] {
+            border-color: #f8f8f8;
         }
         
-        .format-selector {
-            margin-top: 10px;
-            display: flex;
-            justify-content: space-between;
+        /* Canvas grid */
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
         }
         
-        .format-btn {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            padding: 6px 10px;
-            cursor: pointer;
-            font-size: 0.8rem;
+        @media (max-width: 768px) {
+            .canvas-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
-        .format-btn.active {
-            background-color: var(--accent-color);
-            color: white;
+        .canvas-container {
+            text-align: center;
+        }
+        
+        canvas {
+            max-width: 100%;
+            border: 1px solid #111;
+            background-color: #fff;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+        
+        body.dark canvas {
+            border-color: #f8f8f8;
+            background-color: #222;
+        }
+        
+        /* Progress indicators */
+        .progress-container {
+            height: 4px;
+            background-color: #eee;
+            margin: 1rem 0;
+            display: none;
+            transition: background-color 0.3s;
+        }
+        
+        body.dark .progress-container {
+            background-color: #333;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #111;
+            transition: width 0.3s, background-color 0.3s;
+        }
+        
+        body.dark .progress-bar {
+            background-color: #f8f8f8;
+        }
+        
+        .status-message {
+            text-align: center;
+            margin: 1rem 0;
+            display: none;
+        }
+        
+        /* Instructions section */
+        .instructions {
+            margin-top: 2rem;
+            border-top: 1px solid #111;
+            padding-top: 1.5rem;
+            transition: border-color 0.3s;
+        }
+        
+        body.dark .instructions {
+            border-color: #f8f8f8;
+        }
+        
+        .pin-visualization {
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+        
+        ol, ul {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Action buttons */
+        .action-button {
+            display: block;
+            margin: 1.5rem auto;
+            min-width: 200px;
+        }
+        
+        /* Success message */
+        .success-message {
+            text-align: center;
+            margin: 1rem 0;
         }
     </style>
 </head>
 <body>
-    <button id="modeToggle" class="mode-toggle" aria-label="Toggle dark mode">DARK</button>
-    
-    <div class="container">
-        <h1>Ultra Image Compressor</h1>
+    <div class="app-container">
+        <button class="dark-mode-toggle" id="darkModeToggle">DARK</button>
+        <h1>IMAGE ↔ STRING ART CONVERTER</h1>
         
-        <div id="dropArea" class="drop-area">
-            <p>Drag & drop images here</p>
-            <p>or</p>
-            <button id="browseBtn">Browse Files</button>
-            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        <div class="upload-area" id="dropArea">
+            Drag & drop image files here
+            <br>or
+            <br><br>
+            <button id="browseButton">Browse Files</button>
+            <input type="file" id="imageUpload" accept="image/*" style="display: none;">
         </div>
         
-        <div id="controls" class="controls">
-            <div class="slider-container">
-                <label for="qualitySlider">Quality: <span id="qualityValue" class="option-value">80%</span></label>
-                <input type="range" id="qualitySlider" min="5" max="95" value="80">
-            </div>
-            
-            <div class="slider-container">
-                <label for="sizeSlider">Size: <span id="sizeValue" class="option-value">100%</span></label>
-                <input type="range" id="sizeSlider" min="10" max="100" value="100">
-            </div>
-            
-            <div class="checkbox-container">
-                <label>
-                    <input type="checkbox" id="stripMetadata" checked>
-                    Strip metadata (EXIF, etc.)
-                </label>
-            </div>
-            
-            <div class="format-selector">
-                <span>Output Format:</span>
-                <div>
-                    <button class="format-btn" data-format="jpeg">JPEG</button>
-                    <button class="format-btn active" data-format="webp">WebP</button>
-                    <button class="format-btn" data-format="avif">AVIF</button>
+        <div class="controls">
+            <div class="control-group">
+                <label>PINS: <span id="numPinsValue">100</span></label>
+                <div class="slider-container">
+                    <input type="range" id="numPins" min="20" max="200" value="100">
                 </div>
             </div>
-        </div>
-        
-        <div id="previewContainer" class="preview-container">
-            <div class="preview-box">
-                <h3 class="preview-title">Original Image <span id="originalSize"></span></h3>
-                <img id="originalPreview" class="preview-image">
+            
+            <div class="control-group">
+                <label>STRINGS: <span id="numStringsValue">1000</span></label>
+                <div class="slider-container">
+                    <input type="range" id="numStrings" min="100" max="2000" value="1000">
+                </div>
             </div>
-            <div class="preview-box">
-                <h3 class="preview-title">Compressed Preview <span id="compressedSize"></span></h3>
-                <img id="compressedPreview" class="preview-image">
+            
+            <div class="control-group">
+                <label>STRING COLOR</label>
+                <input type="color" id="stringColor" value="#000000">
+            </div>
+            
+            <div class="control-group">
+                <label>BACKGROUND COLOR</label>
+                <input type="color" id="backgroundColor" value="#ffffff">
             </div>
         </div>
         
-        <div style="text-align: center;">
-            <button id="compressBtn" disabled>Compress & Download</button>
+        <button id="generateBtn" class="action-button">Convert & Generate</button>
+        
+        <div id="statusMessage" class="status-message">Processing image...</div>
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
         </div>
         
-        <div id="status" class="status"></div>
-        <div id="stats" class="stats"></div>
+        <div id="successMessage" class="success-message"></div>
         
-        <div class="info">
-            <h3>How it works</h3>
-            <p>• Uses advanced WebP/AVIF algorithms for max compression</p>
-            <p>• Achieves 1-10% of original size with minimal quality loss</p>
-            <p>• Adjust quality and size for optimal results</p>
-            <p>• Preview changes before downloading</p>
+        <div class="canvas-grid">
+            <div class="canvas-container">
+                <h2>Original Image</h2>
+                <canvas id="originalCanvas"></canvas>
+            </div>
+            
+            <div class="canvas-container">
+                <h2>String Art</h2>
+                <canvas id="stringArtCanvas"></canvas>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h2>How it works</h2>
+            <ul>
+                <li>Upload an image to convert it into string art</li>
+                <li>Adjust pins and strings to control complexity</li>
+                <li>The algorithm finds optimal string paths</li>
+                <li>Follow the generated instructions to create it in real life</li>
+            </ul>
+            
+            <div id="pinVisualization" class="pin-visualization">
+                <h2>Pin Layout</h2>
+                <canvas id="pinLayoutCanvas" width="400" height="400"></canvas>
+            </div>
+            
+            <h2>Implementation Guide</h2>
+            <ol id="instructions">
+                <li>Upload an image and click "Convert & Generate" to see instructions.</li>
+            </ol>
+            
+            <button id="downloadBtn" class="action-button" style="display:none;">Download Instructions</button>
         </div>
     </div>
-
+    
     <script>
-        // DOM elements
+        // DOM Elements
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const imageUpload = document.getElementById('imageUpload');
+        const browseButton = document.getElementById('browseButton');
         const dropArea = document.getElementById('dropArea');
-        const fileInput = document.getElementById('fileInput');
-        const browseBtn = document.getElementById('browseBtn');
-        const compressBtn = document.getElementById('compressBtn');
-        const statusEl = document.getElementById('status');
-        const statsEl = document.getElementById('stats');
-        const modeToggle = document.getElementById('modeToggle');
-        const controlsEl = document.getElementById('controls');
-        const previewContainer = document.getElementById('previewContainer');
-        const originalPreview = document.getElementById('originalPreview');
-        const compressedPreview = document.getElementById('compressedPreview');
-        const originalSizeEl = document.getElementById('originalSize');
-        const compressedSizeEl = document.getElementById('compressedSize');
+        const originalCanvas = document.getElementById('originalCanvas');
+        const stringArtCanvas = document.getElementById('stringArtCanvas');
+        const pinLayoutCanvas = document.getElementById('pinLayoutCanvas');
+        const numPinsSlider = document.getElementById('numPins');
+        const numPinsValue = document.getElementById('numPinsValue');
+        const numStringsSlider = document.getElementById('numStrings');
+        const numStringsValue = document.getElementById('numStringsValue');
+        const stringColorPicker = document.getElementById('stringColor');
+        const backgroundColorPicker = document.getElementById('backgroundColor');
+        const generateBtn = document.getElementById('generateBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const successMessage = document.getElementById('successMessage');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const instructions = document.getElementById('instructions');
+        const downloadBtn = document.getElementById('downloadBtn');
         
-        // Compression controls
-        const qualitySlider = document.getElementById('qualitySlider');
-        const qualityValue = document.getElementById('qualityValue');
-        const sizeSlider = document.getElementById('sizeSlider');
-        const sizeValue = document.getElementById('sizeValue');
-        const stripMetadata = document.getElementById('stripMetadata');
-        const formatBtns = document.querySelectorAll('.format-btn');
+        // Dark mode toggle
+        darkModeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('dark');
+            darkModeToggle.textContent = document.body.classList.contains('dark') ? 'LIGHT' : 'DARK';
+        });
         
-        let currentImage = null;
-        let currentFormat = 'webp';
-        let compressedBlob = null;
+        // Global variables
+        let originalImage = null;
+        let pins = [];
+        let stringSequence = [];
         
-        // Dark mode functionality
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
-            modeToggle.textContent = 'LIGHT';
-        }
+        // Handle file browse button
+        browseButton.addEventListener('click', function() {
+            imageUpload.click();
+        });
         
-        modeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
+        // Update slider value displays
+        numPinsSlider.addEventListener('input', () => {
+            numPinsValue.textContent = numPinsSlider.value;
+        });
+        
+        numStringsSlider.addEventListener('input', () => {
+            numStringsValue.textContent = numStringsSlider.value;
+        });
+        
+        // Handle image upload
+        imageUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
             
-            if (document.body.classList.contains('dark-mode')) {
-                modeToggle.textContent = 'LIGHT';
-                localStorage.setItem('darkMode', 'true');
-            } else {
-                modeToggle.textContent = 'DARK';
-                localStorage.setItem('darkMode', 'false');
-            }
+            handleFile(file);
         });
         
-        // File handling event listeners
-        dropArea.addEventListener('dragover', (e) => {
+        // Handle drag and drop
+        dropArea.addEventListener('dragover', function(e) {
             e.preventDefault();
-            dropArea.classList.add('active');
+            dropArea.style.borderColor = '#000';
         });
         
-        dropArea.addEventListener('dragleave', () => {
-            dropArea.classList.remove('active');
+        dropArea.addEventListener('dragleave', function() {
+            dropArea.style.borderColor = '';
         });
         
-        dropArea.addEventListener('drop', (e) => {
+        dropArea.addEventListener('drop', function(e) {
             e.preventDefault();
-            dropArea.classList.remove('active');
-            if (e.dataTransfer.files.length > 0 && e.dataTransfer.files[0].type.startsWith('image/')) {
-                handleImageFile(e.dataTransfer.files[0]);
-            } else {
-                statusEl.textContent = 'Please drop an image file.';
-            }
-        });
-        
-        browseBtn.addEventListener('click', () => {
-            fileInput.click();
-        });
-        
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length > 0) {
-                handleImageFile(fileInput.files[0]);
-            }
-        });
-        
-        compressBtn.addEventListener('click', () => {
-            if (compressedBlob) {
-                // Generate a filename
-                const extension = currentFormat === 'jpeg' ? 'jpg' : currentFormat;
-                const filename = `compressed_${Math.floor(Date.now() / 1000)}.${extension}`;
-                
-                // Create download link
-                const url = URL.createObjectURL(compressedBlob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                // Show success message
-                statusEl.textContent = `Image successfully compressed and downloaded.`;
-            }
-        });
-        
-        // Format selector
-        formatBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                formatBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentFormat = btn.dataset.format;
-                
-                if (currentImage) {
-                    updateCompressedPreview();
+            dropArea.style.borderColor = '';
+            
+            if (e.dataTransfer.files.length) {
+                const file = e.dataTransfer.files[0];
+                if (file.type.match('image.*')) {
+                    handleFile(file);
                 }
-            });
-        });
-        
-        // Control event listeners
-        qualitySlider.addEventListener('input', () => {
-            qualityValue.textContent = `${qualitySlider.value}%`;
-            if (currentImage) {
-                updateCompressedPreview();
             }
         });
         
-        sizeSlider.addEventListener('input', () => {
-            sizeValue.textContent = `${sizeSlider.value}%`;
-            if (currentImage) {
-                updateCompressedPreview();
-            }
-        });
-        
-        stripMetadata.addEventListener('change', () => {
-            if (currentImage) {
-                updateCompressedPreview();
-            }
-        });
-        
-        function handleImageFile(file) {
-            if (!file.type.startsWith('image/')) {
-                statusEl.textContent = 'Please select an image file.';
-                return;
-            }
-            
-            currentImage = file;
-            compressBtn.disabled = true;
-            statsEl.style.display = 'none';
-            
-            // Read and display the original image
+        // Process the uploaded file
+        function handleFile(file) {
             const reader = new FileReader();
-            reader.onload = (e) => {
-                // Display original image
-                originalPreview.src = e.target.result;
-                originalSizeEl.textContent = `(${formatBytes(file.size)})`;
-                
-                // Show controls and preview
-                controlsEl.style.display = 'block';
-                previewContainer.style.display = 'flex';
-                
-                // Generate compressed preview
-                updateCompressedPreview();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    originalImage = img;
+                    displayOriginalImage();
+                    successMessage.textContent = "Image uploaded successfully";
+                    successMessage.style.display = "block";
+                    setTimeout(() => {
+                        successMessage.style.display = "none";
+                    }, 3000);
+                };
+                img.src = event.target.result;
             };
             reader.readAsDataURL(file);
         }
         
-        function showLoading(message = 'Processing...') {
-            const loader = document.createElement('div');
-            loader.className = 'loading';
-            loader.innerHTML = `<div class="spinner"></div><p id="loadingMessage">${message}</p>`;
-            document.body.appendChild(loader);
-            return {
-                element: loader,
-                updateMessage: (msg) => {
-                    document.getElementById('loadingMessage').textContent = msg;
+        // Display original image on canvas
+        function displayOriginalImage() {
+            if (!originalImage) return;
+            
+            const ctx = originalCanvas.getContext('2d');
+            
+            // Set canvas size with max dimensions of 400px
+            const maxDim = 400;
+            let width = originalImage.width;
+            let height = originalImage.height;
+            
+            if (width > height) {
+                if (width > maxDim) {
+                    height = height * (maxDim / width);
+                    width = maxDim;
                 }
-            };
+            } else {
+                if (height > maxDim) {
+                    width = width * (maxDim / height);
+                    height = maxDim;
+                }
+            }
+            
+            originalCanvas.width = width;
+            originalCanvas.height = height;
+            
+            // Draw image
+            ctx.clearRect(0, 0, width, height);
+            ctx.drawImage(originalImage, 0, 0, width, height);
         }
         
-        async function updateCompressedPreview() {
-            if (!currentImage) return;
+        // Generate button click handler
+        generateBtn.addEventListener('click', function() {
+            if (!originalImage) {
+                alert('Please upload an image first');
+                return;
+            }
             
-            const loader = showLoading('Compressing image...');
+            // Show status message and progress bar
+            statusMessage.style.display = 'block';
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            generateBtn.disabled = true;
             
-            try {
-                // Get compression settings
-                const quality = parseInt(qualitySlider.value) / 100;
-                const size = parseInt(sizeSlider.value) / 100;
-                const removeMetadata = stripMetadata.checked;
+            // Get parameters
+            const numPins = parseInt(numPinsSlider.value);
+            const numStrings = parseInt(numStringsSlider.value);
+            const stringColor = stringColorPicker.value;
+            const backgroundColor = backgroundColorPicker.value;
+            
+            // Use setTimeout to allow UI to update before processing
+            setTimeout(() => {
+                // Generate string art
+                generateStringArt(numPins, numStrings, stringColor, backgroundColor);
                 
-                // Compress the image
-                compressedBlob = await compressImage(
-                    currentImage, 
-                    currentFormat, 
-                    quality, 
-                    size, 
-                    removeMetadata
-                );
+                // Create pin layout visualization
+                createPinLayout(numPins, backgroundColor);
                 
-                // Show compressed preview
-                const compressedUrl = URL.createObjectURL(compressedBlob);
-                compressedPreview.src = compressedUrl;
+                // Generate instructions
+                createInstructions(numPins, numStrings, stringColor);
                 
-                // Update size info
-                compressedSizeEl.textContent = `(${formatBytes(compressedBlob.size)})`;
+                // Show download button
+                downloadBtn.style.display = 'block';
                 
-                // Enable download button
-                compressBtn.disabled = false;
+                // Hide status message and show success
+                statusMessage.style.display = 'none';
+                progressContainer.style.display = 'none';
+                successMessage.textContent = "String art generated successfully";
+                successMessage.style.display = "block";
+                setTimeout(() => {
+                    successMessage.style.display = "none";
+                }, 3000);
                 
-                // Show compression stats
-                const originalSize = currentImage.size;
-                const compressedSize = compressedBlob.size;
-                const ratio = originalSize / compressedSize;
-                const percentage = ((originalSize - compressedSize) / originalSize * 100).toFixed(2);
+                generateBtn.disabled = false;
+            }, 100);
+        });
+        
+        // Generate string art
+        function generateStringArt(numPins, numStrings, stringColor, backgroundColor) {
+            // Setup canvas
+            const canvas = stringArtCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            // Match dimensions with original canvas
+            canvas.width = originalCanvas.width;
+            canvas.height = originalCanvas.height;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Fill background
+            ctx.fillStyle = backgroundColor;
+            ctx.fillRect(0, 0, width, height);
+            
+            // Get original image data
+            const originalCtx = originalCanvas.getContext('2d');
+            const imgData = originalCtx.getImageData(0, 0, width, height);
+            const data = imgData.data;
+            
+            // Create grayscale intensity map (inverted)
+            const intensityMap = new Uint8Array(width * height);
+            for (let i = 0; i < data.length; i += 4) {
+                const x = (i / 4) % width;
+                const y = Math.floor((i / 4) / width);
+                const idx = y * width + x;
                 
-                const ratioClass = ratio > 10 ? 'good-ratio' : '';
+                // Convert to grayscale and invert
+                const gray = 255 - Math.round(0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2]);
+                intensityMap[idx] = gray;
+            }
+            
+            // Create pins in circular arrangement
+            pins = [];
+            const radius = Math.min(width, height) * 0.45;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            for (let i = 0; i < numPins; i++) {
+                const angle = (i / numPins) * Math.PI * 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                pins.push({ x, y, index: i });
+            }
+            
+            // Draw pins
+            ctx.fillStyle = document.body.classList.contains('dark') ? '#fff' : '#000';
+            pins.forEach(pin => {
+                ctx.beginPath();
+                ctx.arc(pin.x, pin.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Creates an array representing pixels on a line
+            function createLineMap(from, to) {
+                const lineMap = new Uint8Array(width * height);
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const steps = Math.max(Math.abs(dx), Math.abs(dy)) * 2;
                 
-                statsEl.innerHTML = `<strong>Compression Results:</strong><br>
-                    Original Size: ${formatBytes(originalSize)}<br>
-                    Compressed Size: ${formatBytes(compressedSize)}<br>
-                    Reduction: ${percentage}%<br>
-                    Compression Ratio: <span class="${ratioClass}">${ratio.toFixed(2)}x</span>`;
-                statsEl.style.display = 'block';
-                
-                // Show appropriate message
-                if (ratio < 5) {
-                    statusEl.textContent = 'Tip: Try a lower quality or size setting for even smaller files.';
-                } else if (ratio > 20) {
-                    statusEl.textContent = 'Excellent compression achieved!';
-                } else {
-                    statusEl.textContent = 'Good compression. Adjust settings if needed.';
+                for (let i = 0; i <= steps; i++) {
+                    const t = i / steps;
+                    const x = Math.floor(from.x + t * dx);
+                    const y = Math.floor(from.y + t * dy);
+                    
+                    if (x >= 0 && x < width && y >= 0 && y < height) {
+                        lineMap[y * width + x] = 1;
+                    }
                 }
-            } catch (error) {
-                statusEl.textContent = `Error: ${error.message}`;
-                console.error(error);
-            } finally {
-                document.body.removeChild(loader.element);
+                
+                return lineMap;
+            }
+            
+            // Initialize the string art algorithm
+            stringSequence = [];
+            let currentPin = 0;
+            let workingIntensityMap = new Uint8Array(intensityMap);
+            
+            for (let s = 0; s < numStrings; s++) {
+                let bestScore = -1;
+                let bestPin = -1;
+                let bestLineMap = null;
+                
+                // Find the best pin to connect to
+                for (let i = 0; i < numPins; i++) {
+                    if (i === currentPin) continue;
+                    
+                    const from = pins[currentPin];
+                    const to = pins[i];
+                    const lineMap = createLineMap(from, to);
+                    
+                    // Calculate how well this line matches dark areas
+                    let score = 0;
+                    for (let j = 0; j < lineMap.length; j++) {
+                        if (lineMap[j]) {
+                            score += workingIntensityMap[j];
+                        }
+                    }
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestPin = i;
+                        bestLineMap = lineMap;
+                    }
+                }
+                
+                if (bestPin === -1) break;
+                
+                // Draw the best line
+                const from = pins[currentPin];
+                const to = pins[bestPin];
+                
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.strokeStyle = stringColor;
+                ctx.lineWidth = 0.7;
+                ctx.stroke();
+                
+                // Add to string sequence
+                stringSequence.push({ from: currentPin, to: bestPin });
+                
+                // Update intensity map - reduce values where we drew a line
+                for (let j = 0; j < bestLineMap.length; j++) {
+                    if (bestLineMap[j]) {
+                        workingIntensityMap[j] = Math.max(0, workingIntensityMap[j] - 35);
+                    }
+                }
+                
+                // Move to next pin
+                currentPin = bestPin;
+                
+                // Update progress bar every 10 strings
+                if (s % 10 === 0) {
+                    const progress = s / numStrings * 100;
+                    progressBar.style.width = progress + '%';
+                }
+            }
+            
+            // Final progress update
+            progressBar.style.width = '100%';
+        }
+        
+        // Create pin layout visualization
+        function createPinLayout(numPins, backgroundColor) {
+            const canvas = pinLayoutCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas with background color
+            ctx.fillStyle = backgroundColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add a board outline
+            const outlineColor = document.body.classList.contains('dark') ? '#fff' : '#111';
+            ctx.strokeStyle = outlineColor;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(10, 10, canvas.width-20, canvas.height-20);
+            
+            // Draw circle guide
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(canvas.width, canvas.height) * 0.4;
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = outlineColor;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // Determine text color based on background
+            const isBackgroundDark = isColorDark(backgroundColor);
+            const textColor = isBackgroundDark ? '#fff' : '#111';
+            
+            // Draw pins and numbers
+            for (let i = 0; i < numPins; i++) {
+                const angle = (i / numPins) * Math.PI * 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                
+                // Draw pin
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = textColor;
+                ctx.fill();
+                
+                // Only show labels for every 5th pin to avoid crowding
+                if (i % 5 === 0) {
+                    const labelRadius = radius + 15;
+                    const labelX = centerX + labelRadius * Math.cos(angle);
+                    const labelY = centerY + labelRadius * Math.sin(angle);
+                    
+                    ctx.fillStyle = textColor;
+                    ctx.font = '10px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText((i + 1).toString(), labelX, labelY);
+                }
+            }
+            
+            // Add center marker
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+            ctx.fillStyle = stringColorPicker.value;
+            ctx.fill();
+            
+            // Add pin count text
+            ctx.fillStyle = textColor;
+            ctx.font = '12px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${numPins} PINS ARRANGED IN A CIRCLE`, centerX, canvas.height - 20);
+        }
+        
+        // Helper function to check if a color is dark
+        function isColorDark(hexColor) {
+            const r = parseInt(hexColor.substr(1, 2), 16);
+            const g = parseInt(hexColor.substr(3, 2), 16);
+            const b = parseInt(hexColor.substr(5, 2), 16);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            return brightness < 128;
+        }
+        
+        // Create instructions for real-life implementation
+        function createInstructions(numPins, numStrings, stringColor) {
+            instructions.innerHTML = '';
+            
+            // Materials needed
+            const materialsLi = document.createElement('li');
+            materialsLi.innerHTML = '<strong>MATERIALS:</strong><ul>' +
+                '<li>Wooden board (recommended size: 12" x 12")</li>' +
+                `<li>${numPins} pins or small nails</li>` +
+                `<li>String in color code: ${stringColor} (approx. ${Math.ceil(numStrings * 1.5)} feet)</li>` +
+                '<li>Hammer, ruler, compass</li>' +
+                '</ul>';
+            instructions.appendChild(materialsLi);
+            
+            // Preparation
+            const prepLi = document.createElement('li');
+            prepLi.innerHTML = '<strong>PREPARATION:</strong><ul>' +
+                '<li>Mark center point of board</li>' +
+                '<li>Draw circle around center point</li>' +
+                `<li>Place ${numPins} pins evenly around circle</li>` +
+                '<li>Number pins 1 to ' + numPins + ' clockwise</li>' +
+                '</ul>';
+            instructions.appendChild(prepLi);
+            
+            // String sequence
+            if (stringSequence.length > 0) {
+                const sequenceLi = document.createElement('li');
+                sequenceLi.innerHTML = '<strong>STRING SEQUENCE:</strong>';
+                
+                // If many strings, show first 15 and then notify about download
+                if (stringSequence.length > 30) {
+                    sequenceLi.innerHTML += '<p>First 15 connections:</p>';
+                    
+                    const sequenceDiv = document.createElement('div');
+                    
+                    for (let i = 0; i < 15; i++) {
+                        const line = document.createElement('div');
+                        line.textContent = `${i+1}: Connect pin ${stringSequence[i].from+1} to pin ${stringSequence[i].to+1}`;
+                        sequenceDiv.appendChild(line);
+                    }
+                    
+                    sequenceLi.appendChild(sequenceDiv);
+                    sequenceLi.innerHTML += '<p>Download complete instructions using button below</p>';
+                } else {
+                    // Show all strings if less than 30
+                    const sequenceDiv = document.createElement('div');
+                    
+                    for (let i = 0; i < stringSequence.length; i++) {
+                        const line = document.createElement('div');
+                        line.textContent = `${i+1}: Connect pin ${stringSequence[i].from+1} to pin ${stringSequence[i].to+1}`;
+                        sequenceDiv.appendChild(line);
+                    }
+                    
+                    sequenceLi.appendChild(sequenceDiv);
+                }
+                
+                instructions.appendChild(sequenceLi);
             }
         }
         
-        // Helper function to format bytes
-        function formatBytes(bytes, decimals = 2) {
-            if (bytes === 0) return '0 Bytes';
+        // Download instructions as text file
+        downloadBtn.addEventListener('click', function() {
+            const numPins = parseInt(numPinsSlider.value);
+            const numStrings = parseInt(numStringsSlider.value);
+            const stringColor = stringColorPicker.value;
             
-            const k = 1024;
-            const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            let text = "STRING ART INSTRUCTIONS\n";
+            text += "======================\n\n";
             
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            text += "MATERIALS NEEDED:\n";
+            text += "- Wooden board (12\" x 12\" or larger)\n";
+            text += `- ${numPins} pins or small nails\n`;
+            text += `- String in color ${stringColor}\n`;
+            text += "- Hammer, ruler, compass\n\n";
             
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-        }
-        
-        // Main compression function
-        async function compressImage(file, format, quality, scale, stripMeta) {
-            return new Promise((resolve, reject) => {
-                // Create an image object
-                const img = new Image();
-                img.onload = () => {
-                    // Calculate new dimensions
-                    let newWidth = img.width * scale;
-                    let newHeight = img.height * scale;
-                    
-                    // Create a canvas
-                    const canvas = document.createElement('canvas');
-                    canvas.width = newWidth;
-                    canvas.height = newHeight;
-                    
-                    // Draw the image on the canvas with the new size
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, newWidth, newHeight);
-                    
-                    // Get the proper mime type
-                    let mimeType;
-                    switch (format) {
-                        case 'webp':
-                            mimeType = 'image/webp';
-                            break;
-                        case 'avif':
-                            mimeType = 'image/avif';
-                            break;
-                        case 'jpeg':
-                        default:
-                            mimeType = 'image/jpeg';
-                            break;
-                    }
-                    
-                    // Convert to the desired format with compression
-                    canvas.toBlob(
-                        (blob) => {
-                            if (blob) {
-                                resolve(blob);
-                            } else {
-                                // If the format is not supported (like AVIF in some browsers),
-                                // fall back to WebP
-                                if (format === 'avif') {
-                                    canvas.toBlob(
-                                        (webpBlob) => {
-                                            if (webpBlob) {
-                                                resolve(webpBlob);
-                                            } else {
-                                                reject(new Error('Failed to compress image'));
-                                            }
-                                        },
-                                        'image/webp',
-                                        quality
-                                    );
-                                } else {
-                                    reject(new Error('Failed to compress image'));
-                                }
-                            }
-                        },
-                        mimeType,
-                        quality
-                    );
-                };
-                
-                img.onerror = () => reject(new Error('Failed to load image'));
-                
-                // Load the image
-                img.src = URL.createObjectURL(file);
-            });
-        }
+            text += "SETUP INSTRUCTIONS:\n";
+            text += "1. Mark center of board\n";
+            text += "2. Draw circle around center\n";
+            text += `3. Place ${numPins} pins evenly around circle\n`;
+            text += "4. Number pins 1 to " + numPins + " clockwise\n\n";
+            
+            text += "STRING SEQUENCE:\n";
+            for (let i = 0; i < stringSequence.length; i++) {
+                text += `${i+1}. Connect pin ${stringSequence[i].from+1} to pin ${stringSequence[i].to+1}\n`;
+            }
+            
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'string_art_instructions.txt';
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            
+            successMessage.textContent = "Instructions downloaded successfully";
+            successMessage.style.display = "block";
+            setTimeout(() => {
+                successMessage.style.display = "none";
+            }, 3000);
+        });
     </script>
 </body>
 </html>
