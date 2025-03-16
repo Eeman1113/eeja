@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image-to-Text Converter</title>
+    <style>
+        :root {
+            --primary-color: #222;
+            --secondary-color: #f5f5f5;
+            --accent-color: #ff6b6b;
+            --border-color: #444;
+            --bg-color: white;
+            --text-color: #222;
+            --drop-hover-color: rgba(0,0,0,0.03);
+            --info-border-color: #eee;
+            --loading-bg: rgba(255,255,255,0.8);
+            --button-text: white;
+        }
+        
+        body.dark-mode {
+            --primary-color: #f5f5f5;
+            --secondary-color: #222;
+            --accent-color: #ff6b6b;
+            --border-color: #666;
+            --bg-color: #333;
+            --text-color: #f5f5f5;
+            --drop-hover-color: rgba(255,255,255,0.05);
+            --info-border-color: #555;
+            --loading-bg: rgba(0,0,0,0.7);
+            --button-text: #222;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background-color: var(--bg-color);
+            border: 2px solid var(--border-color);
+            box-shadow: 6px 6px 0 var(--border-color);
+            padding: 30px;
+            position: relative;
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        .drop-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 4px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .drop-area:hover, .drop-area.active {
+            background-color: var(--drop-hover-color);
+            border-color: var(--accent-color);
+        }
+        
+        .drop-area p {
+            margin: 8px 0;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: var(--button-text);
+            border: none;
+            padding: 10px 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s ease;
+        }
+        
+        button:hover {
+            background-color: var(--accent-color);
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .info {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--info-border-color);
+            font-size: 0.9rem;
+        }
+        
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--loading-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+        
+        .status {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            box-shadow: 3px 3px 0 var(--border-color);
+            padding: 5px 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+            font-family: 'Courier New', monospace;
+            z-index: 100;
+        }
+        
+        .mode-toggle:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <button id="modeToggle" class="mode-toggle" aria-label="Toggle dark mode">DARK</button>
+    
+    <div class="container">
+        <h1>Image ↔ Text Converter</h1>
+        
+        <div id="dropArea" class="drop-area">
+            <p>Drag & drop files here</p>
+            <p>or</p>
+            <button id="browseBtn">Browse Files</button>
+            <input type="file" id="fileInput" multiple style="display: none;">
+        </div>
+        
+        <div style="text-align: center;">
+            <button id="convertBtn" disabled>Convert & Download</button>
+        </div>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="info">
+            <h3>How it works</h3>
+            <p>• Drop image files to convert them to text matrices</p>
+            <p>• Drop text files to convert them back to images</p>
+            <p>• Multiple files will be packaged in a zip file</p>
+            <p>• No quality loss during conversion</p>
+        </div>
+    </div>
+
+    <script>
+        // Add JSZip library
+        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"><\/script>');
+        
+        let files = [];
+        let jsZipLoaded = false;
+        
+        // Check when JSZip is loaded
+        window.addEventListener('load', function() {
+            if (typeof JSZip !== 'undefined') {
+                jsZipLoaded = true;
+            }
+        });
+        
+        // DOM elements
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+        const browseBtn = document.getElementById('browseBtn');
+        const convertBtn = document.getElementById('convertBtn');
+        const statusEl = document.getElementById('status');
+        const modeToggle = document.getElementById('modeToggle');
+        
+        // Dark mode functionality
+        // Check for saved user preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            modeToggle.textContent = 'LIGHT';
+        }
+        
+        // Toggle dark mode
+        modeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                modeToggle.textContent = 'LIGHT';
+                localStorage.setItem('darkMode', 'true');
+            } else {
+                modeToggle.textContent = 'DARK';
+                localStorage.setItem('darkMode', 'false');
+            }
+        });
+        
+        // File handling event listeners
+        dropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropArea.classList.add('active');
+        });
+        
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('active');
+        });
+        
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropArea.classList.remove('active');
+            handleFiles(e.dataTransfer.files);
+        });
+        
+        browseBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', () => {
+            handleFiles(fileInput.files);
+        });
+        
+        convertBtn.addEventListener('click', async () => {
+            await processFiles();
+        });
+        
+        // Functions
+        function handleFiles(fileList) {
+            files = Array.from(fileList);
+            
+            if (files.length > 0) {
+                convertBtn.disabled = false;
+                statusEl.textContent = `${files.length} file(s) selected`;
+            } else {
+                convertBtn.disabled = true;
+                statusEl.textContent = '';
+            }
+        }
+        
+        function showLoading() {
+            const loader = document.createElement('div');
+            loader.className = 'loading';
+            loader.innerHTML = '<p>Processing...</p>';
+            document.body.appendChild(loader);
+            return loader;
+        }
+        
+        async function processFiles() {
+            if (files.length === 0) return;
+            
+            if (files.length > 1 && !jsZipLoaded) {
+                statusEl.textContent = 'Please wait for JSZip to load...';
+                setTimeout(processFiles, 1000);
+                return;
+            }
+            
+            const loader = showLoading();
+            
+            try {
+                if (files.length === 1) {
+                    const file = files[0];
+                    
+                    if (file.type.startsWith('image/')) {
+                        // Image to text - keep original name but change extension to .txt
+                        const textContent = await imageToText(file);
+                        const fileName = file.name.split('.').slice(0, -1).join('.') + '.txt';
+                        downloadFile(textContent, fileName, 'text/plain');
+                        statusEl.textContent = 'Image converted to text successfully';
+                    } else if (file.name.endsWith('.txt')) {
+                        // Text to image - keep original name but change extension to .png
+                        try {
+                            const imageCanvas = await textToImage(file);
+                            const dataURL = imageCanvas.toDataURL('image/png');
+                            const fileName = file.name.replace('.txt', '.png');
+                            downloadDataURL(dataURL, fileName);
+                            statusEl.textContent = 'Text converted to image successfully';
+                        } catch (e) {
+                            statusEl.textContent = 'Error: Invalid text file format';
+                        }
+                    } else {
+                        statusEl.textContent = 'Error: Unsupported file type';
+                    }
+                } else {
+                    // Multiple files - create zip
+                    const zip = new JSZip();
+                    
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        statusEl.textContent = `Processing file ${i+1} of ${files.length}...`;
+                        
+                        if (file.type.startsWith('image/')) {
+                            const textContent = await imageToText(file);
+                            // Use the original file name but with .txt extension
+                            const fileName = file.name.split('.').slice(0, -1).join('.') + '.txt';
+                            zip.file(fileName, textContent);
+                        } else if (file.name.endsWith('.txt')) {
+                            try {
+                                const imageCanvas = await textToImage(file);
+                                const blob = await new Promise(resolve => {
+                                    imageCanvas.toBlob(resolve, 'image/png');
+                                });
+                                // Use the original file name but with .png extension
+                                const fileName = file.name.replace('.txt', '.png');
+                                zip.file(fileName, blob);
+                            } catch (e) {
+                                console.error(`Error processing ${file.name}: ${e}`);
+                            }
+                        }
+                    }
+                    
+                    const content = await zip.generateAsync({type: 'blob'});
+                    const url = URL.createObjectURL(content);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'converted_files.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    statusEl.textContent = 'All files processed and downloaded as zip';
+                }
+            } catch (error) {
+                statusEl.textContent = `Error: ${error.message}`;
+            } finally {
+                document.body.removeChild(loader);
+            }
+        }
+        
+        async function imageToText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const pixels = imageData.data;
+                        
+                        // Create JSON object with image data
+                        const imageObject = {
+                            width: img.width,
+                            height: img.height,
+                            pixels: Array.from(pixels)
+                        };
+                        
+                        resolve(JSON.stringify(imageObject));
+                    };
+                    img.onerror = () => reject(new Error('Failed to load image'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        async function textToImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imageObject = JSON.parse(e.target.result);
+                        
+                        if (!imageObject.width || !imageObject.height || !imageObject.pixels) {
+                            throw new Error('Invalid image data format');
+                        }
+                        
+                        const canvas = document.createElement('canvas');
+                        canvas.width = imageObject.width;
+                        canvas.height = imageObject.height;
+                        
+                        const ctx = canvas.getContext('2d');
+                        const imageData = ctx.createImageData(canvas.width, canvas.height);
+                        
+                        for (let i = 0; i < imageObject.pixels.length; i++) {
+                            imageData.data[i] = imageObject.pixels[i];
+                        }
+                        
+                        ctx.putImageData(imageData, 0, 0);
+                        resolve(canvas);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.readAsText(file);
+            });
+        }
+        
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], {type: type});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function downloadDataURL(dataURL, filename) {
+            const a = document.createElement('a');
+            a.href = dataURL;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
